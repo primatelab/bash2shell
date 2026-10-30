@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CVE-2026-1337 — Bash2Shell</title>
+  <style>
+    :root {
+      --ink: #1b1f24;
+      --muted: #5c6570;
+      --line: #d8dee6;
+      --paper: #f4f6f8;
+      --card: #ffffff;
+      --navy: #0c2340;
+      --navy-2: #16365c;
+      --critical: #9f1239;
+      --critical-bg: #fff1f2;
+      --critical-line: #fecdd3;
+      --gold: #92400e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Liberation Sans", "Nimbus Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    a { color: #1d4e89; }
+
+    header.mast {
+      background: var(--navy);
+      color: #fff;
+      border-bottom: 4px solid var(--critical);
+    }
+
+    .mast-inner, main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    .mast-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      padding-top: 0.85rem;
+      padding-bottom: 0.85rem;
+    }
+
+    .org {
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+    }
+
+    .org span {
+      display: block;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      opacity: 0.8;
+      font-size: 0.78rem;
+      margin-top: 0.15rem;
+    }
+
+    .doc-type {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    .banner {
+      background: var(--critical);
+      color: #fff;
+    }
+
+    .banner .mast-inner {
+      padding-top: 0.55rem;
+      padding-bottom: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      font-size: 0.85rem;
+    }
+
+    main { padding-top: 1.5rem; padding-bottom: 3rem; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    h1 {
+      margin: 0.2rem 0 0.35rem;
+      font-size: 2rem;
+      line-height: 1.15;
+    }
+
+    .cve-id {
+      margin: 0;
+      font-family: "Liberation Mono", "Nimbus Mono PS", ui-monospace, monospace;
+      color: var(--critical);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .lede {
+      margin: 0.6rem 0 0;
+      color: var(--muted);
+    }
+
+    .score {
+      background: var(--card);
+      border: 1px solid var(--critical-line);
+      border-top: 6px solid var(--critical);
+      border-radius: 6px;
+      padding: 0.9rem 1rem 1rem;
+      text-align: center;
+    }
+
+    .score .label {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--critical);
+      font-weight: 700;
+    }
+
+    .score .value {
+      font-size: 3.4rem;
+      line-height: 1;
+      font-weight: 800;
+      margin: 0.2rem 0;
+    }
+
+    .score .outof {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    .vector {
+      margin: 0.75rem 0 0;
+      font-family: "Liberation Mono", "Nimbus Mono PS", ui-monospace, monospace;
+      font-size: 0.68rem;
+      line-height: 1.35;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    .meta article, section.card, .callout, .timeline {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .meta article { padding: 0.75rem 0.9rem; }
+
+    .meta h2, .kicker {
+      margin: 0;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .meta p { margin: 0.25rem 0 0; font-weight: 600; }
+
+    section.card { margin-top: 1rem; padding: 1rem 1.15rem 1.1rem; }
+
+    section.card h2 {
+      margin: 0 0 0.45rem;
+      font-size: 1.15rem;
+    }
+
+    section.card p { margin: 0.45rem 0; }
+
+    ol.steps { margin: 0.4rem 0 0.2rem; padding-left: 1.25rem; }
+
+    ul.impact { margin: 0.4rem 0 0.2rem; padding-left: 1.2rem; }
+
+    ul.mitigations { list-style: none; margin: 0.4rem 0 0; padding: 0; }
+
+    ul.mitigations li {
+      margin: 0.45rem 0;
+      padding-left: 0.15rem;
+    }
+
+    ul.mitigations strong { color: var(--navy); }
+
+    pre {
+      background: #0f1720;
+      color: #e7eef6;
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+      overflow-x: auto;
+      font-family: "Liberation Mono", "Nimbus Mono PS", ui-monospace, monospace;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    pre .cmt { color: #8b9aab; }
+
+    .callout {
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-left: 4px solid var(--navy-2);
+      background: #f8fafc;
+    }
+
+    .callout p { margin: 0; font-size: 1.05rem; }
+
+    .callout footer {
+      margin-top: 0.45rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .timeline { margin-top: 1rem; padding: 1rem 1.15rem 0.4rem; }
+
+    .timeline h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+
+    .timeline ol {
+      list-style: none;
+      margin: 0;
+      padding: 0 0 0.4rem;
+      border-left: 3px solid var(--critical-line);
+    }
+
+    .timeline li {
+      position: relative;
+      margin: 0 0 0.9rem;
+      padding-left: 1.1rem;
+    }
+
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      left: -7px;
+      top: 0.45rem;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--critical);
+    }
+
+    .timeline time {
+      display: block;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    footer.site {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    footer.site .mast-inner { padding-top: 1rem; padding-bottom: 1.4rem; display: block; }
+
+    @media (max-width: 720px) {
+      .hero, .meta { grid-template-columns: 1fr; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="mast">
+    <div class="mast-inner">
+      <div class="org">
+        Center for Extremely Obvious Vulnerabilities
+        <span>CEOV Vulnerability Bulletin</span>
+      </div>
+      <div class="doc-type">Security Advisory</div>
+    </div>
+  </header>
+  <div class="banner">
+    <div class="mast-inner">Severity: Critical</div>
+  </div>
+
+  <main>
+    <div class="hero">
+      <div>
+        <p class="cve-id">CVE-2026-1337</p>
+        <h1>Bash2Shell</h1>
+        <p class="lede">Newly discovered vulnerability in the Linux privilege model. Patch technically available since 1989.</p>
+      </div>
+      <aside class="score">
+        <div class="label">Critical</div>
+        <div class="value">10.0</div>
+        <p class="outof">CVSS 10.0 / 10.0</p>
+        <p class="vector">CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H</p>
+      </aside>
+    </div>
+
+    <div class="meta">
+      <article>
+        <h2>Affected systems</h2>
+        <p>Linux systems running Bash</p>
+      </article>
+      <article>
+        <h2>Status</h2>
+        <p>Newly discovered vulnerability</p>
+      </article>
+      <article>
+        <h2>Patch availability</h2>
+        <p>Technically available since 1989</p>
+      </article>
+    </div>
+
+    <section class="card">
+      <h2>Summary</h2>
+      <p>Security researchers have discovered a critical vulnerability dubbed <strong>Bash2Shell</strong>, which allows an attacker with root access to a Linux system to execute arbitrary code with root privileges.</p>
+      <p>The vulnerability is caused by a fundamental flaw in the Linux privilege model: users who already have complete administrative control over a system can perform actions requiring complete administrative control.</p>
+    </section>
+
+    <section class="card">
+      <h2>Technical Details</h2>
+      <p>Successful exploitation requires the attacker to:</p>
+      <ol class="steps">
+        <li>Obtain root access to the target system.</li>
+        <li>Open a shell.</li>
+        <li>Execute arbitrary commands.</li>
+      </ol>
+      <p>No authentication bypass, privilege escalation, memory corruption, or sophisticated exploitation techniques are required.</p>
+      <p>Researchers confirmed a 100% success rate across all tested systems where the attacker already had root privileges.</p>
+    </section>
+
+    <section class="card">
+      <h2>Proof of Concept</h2>
+      <pre><code>sudo -i
+bash
+whoami
+<span class="cmt"># root</span></code></pre>
+      <p>Researchers describe the exploit as "trivial to reproduce, impossible to mitigate, and deeply concerning to anyone who has misunderstood the threat model."</p>
+    </section>
+
+    <section class="card">
+      <h2>Impact</h2>
+      <p>Successful exploitation may result in:</p>
+      <ul class="impact">
+        <li>Arbitrary code execution as root.</li>
+        <li>Complete system compromise.</li>
+        <li>Unauthorized modification of system files.</li>
+        <li>Installation of persistent backdoors.</li>
+        <li>Unscheduled changes to <code>/etc/motd</code>.</li>
+        <li>Uncontrollable feelings of superiority over non-root users.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Mitigation</h2>
+      <p>The following mitigations are recommended:</p>
+      <ul class="mitigations">
+        <li><strong>Immediate:</strong> Revoke root access from anyone who has root access.</li>
+        <li><strong>Short term:</strong> Avoid executing commands as root.</li>
+        <li><strong>Long term:</strong> Consider migrating to a system where attackers cannot obtain root access, even after obtaining root access.</li>
+        <li><strong>Emergency workaround:</strong> Remove Bash. Then discover that <code>/bin/sh</code> exists.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Vendor Response</h2>
+      <p>The Linux community has acknowledged the report and classified the issue as <em>working as intended</em>.</p>
+      <p>GNU maintainers have reportedly responded:</p>
+      <blockquote class="callout">
+        <p>"If an attacker already has root, they can execute arbitrary code as root. We consider this a feature, not a bug."</p>
+        <footer>GNU maintainers</footer>
+      </blockquote>
+    </section>
+
+    <section class="card">
+      <h2>Credits</h2>
+      <p>Discovered by the <strong>Center for Extremely Obvious Vulnerabilities (CEOV)</strong> during a routine penetration test in which the tester was accidentally given full administrative access.</p>
+    </section>
+
+    <section class="timeline">
+      <h2>Disclosure timeline</h2>
+      <ol>
+        <li><time datetime="1989">1989</time> Bash released.</li>
+        <li><time datetime="1991">1991</time> Linux released.</li>
+        <li><time datetime="2026">2026</time> Someone finally files a ticket.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="mast-inner">
+      Parody advisory from the Center for Extremely Obvious Vulnerabilities. Not affiliated with NIST, MITRE, or a real CVE program.
+    </div>
+  </footer>
+</body>
+</html>
