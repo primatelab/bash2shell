@@ -326,7 +326,7 @@
 
     <section class="card">
       <h2>Summary</h2>
-      <p>Security researchers have discovered a critical vulnerability dubbed <strong>Bash2Shell</strong>, which allows an attacker with root access to a Linux system to execute arbitrary code with root privileges.</p>
+      <p>Security researchers have discovered a critical vulnerability dubbed <strong>Bash2Shell</strong>: an attacker who root access to a Linux system can execute arbitrary code with root privileges.</p>
       <p>The vulnerability is caused by a fundamental flaw in the Linux privilege model: users who already have complete administrative control over a system can perform actions requiring complete administrative control.</p>
     </section>
 
@@ -337,6 +337,7 @@
         <li>Obtain root access to the target system.</li>
         <li>Open a shell.</li>
         <li>Execute arbitrary commands.</li>
+        <li>Pretend you did something clever.</li>li
       </ol>
       <p>No authentication bypass, privilege escalation, memory corruption, or sophisticated exploitation techniques are required.</p>
       <p>Researchers confirmed a 100% success rate across all tested systems where the attacker already had root privileges.</p>
@@ -348,7 +349,7 @@
 bash
 whoami
 <span class="cmt"># root</span></code></pre>
-      <p>Researchers describe the exploit as "trivial to reproduce, impossible to mitigate, and deeply concerning to anyone who has misunderstood the threat model."</p>
+      <p>Researchers describe the exploit as "trivial to reproduce, impossible to mitigate, and deeply concerning to anyone who has misunderstood Linux."</p>
     </section>
 
     <section class="card">
@@ -360,6 +361,7 @@ whoami
         <li>Unauthorized modification of system files.</li>
         <li>Installation of persistent backdoors.</li>
         <li>Unscheduled changes to <code>/etc/motd</code>.</li>
+        <li>Unwanted responibility for maintenance of compromised system.</li>
         <li>Uncontrollable feelings of superiority over non-root users.</li>
       </ul>
     </section>
